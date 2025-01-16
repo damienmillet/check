@@ -6,13 +6,40 @@ on:
       - 'v*' # Déclenché uniquement sur les tags versionnés (ex : v1.0.0)
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-macos:
+    runs-on: macos-latest
     strategy:
       matrix:
         target:
           - aarch64-apple-darwin
           - x86_64-apple-darwin
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+
+      - name: Add target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Build for macOS targets
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: mon_projet-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/*
+  
+  build-linux-windows:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
           - x86_64-unknown-linux-gnu
           - x86_64-pc-windows-gnu
     steps:
@@ -34,25 +61,27 @@ jobs:
           sudo apt-get update || true
           sudo apt-get install build-essential mingw-w64 || true
 
-      - name: Build for target
+      - name: Build for Linux/Windows targets
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Upload artifact
+      - name: Upload Linux/Windows artifacts
         uses: actions/upload-artifact@v3
         with:
           name: mon_projet-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/mon_projet*
+          path: target/${{ matrix.target }}/release/*
   
   release:
-    needs: build
+    needs:
+      - build-macos
+      - build-linux-windows
     runs-on: ubuntu-latest
     steps:
-      - name: Download artifacts
+      - name: Download all artifacts
         uses: actions/download-artifact@v3
         with:
-          path: artifacts
+          path: ./artifacts
 
-      - name: Create Release
+      - name: Create GitHub Release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -62,10 +91,10 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Upload binaries to release
+      - name: Upload artifacts to release
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: ./artifacts
-          asset_name: mon_projet-${{ github.ref_name }}.tar.gz
+          asset_name: binaries-${{ github.ref_name }}.tar.gz
           asset_content_type: application/gzip
