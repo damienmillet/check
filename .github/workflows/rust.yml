@@ -82,9 +82,10 @@ jobs:
           path: ./artifacts
 
       - name: Create GitHub Release
-        run: gh release create ${{ github.ref_name }} ./artifacts/* \
-          --title "Release ${{ github.ref_name }}" \
-          --notes "Release notes for version ${{ github.ref_name }}"
+        run: |
+            gh release create ${{ github.ref_name }} ./artifacts/* \
+            --title "Release ${{ github.ref_name }}" \
+            --notes "Release notes for version ${{ github.ref_name }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
