@@ -3,7 +3,7 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*' # Déclenché uniquement sur les tags versionnés (ex : v1.0.0)
+      - '*' # Déclenché uniquement sur les tags versionnés (ex : v1.0.0)
 
 jobs:
   build-macos:
