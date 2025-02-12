@@ -1,3 +1,4 @@
+```bash
 Check - A simple tool to check file permissions for a specific user.
 Usage: ./check [-H] [-u <user>] [-v] <folder_path>
 Options:
@@ -7,3 +8,4 @@ Options:
   -h, --help  Display this help message.
 
 Example: ./check /var/www -u user1
+```
